@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('balanced', 'baseline')]
+    [ValidateSet('balanced', 'baseline', 'indirect-window', 'indirect-window-check')]
     [string]$Profile = 'balanced',
     [string]$GameExe = 'game_scarlett_master.exe'
 )
@@ -24,12 +24,19 @@ $Switches = @(
     'VICTORY_DUMP_TARGETS', 'VICTORY_KEYS', 'VICTORY_LATE_WAIT',
     'VICTORY_WIDE_BACK', 'VICTORY_CARD_FETCH_INFLIGHT',
     'VICTORY_LEVELS_ON_DEMAND', 'VICTORY_INPLACE',
-    'VICTORY_INDIRECT_WINDOW', 'VICTORY_WAVE_WIDE'
+    'VICTORY_INDIRECT_WINDOW', 'VICTORY_INDIRECT_WINDOW_CHECK', 'VICTORY_WAVE_WIDE'
 )
 foreach ($Name in $Switches) { Remove-Item "Env:$Name" -ErrorAction SilentlyContinue }
 
 if ($Profile -eq 'baseline') { $env:VICTORY_RELAY = '0' }
 else { $env:VICTORY_RELAY = '2' }
+
+if ($Profile -in @('indirect-window', 'indirect-window-check')) {
+    $env:VICTORY_INDIRECT_WINDOW = '1'
+}
+if ($Profile -eq 'indirect-window-check') {
+    $env:VICTORY_INDIRECT_WINDOW_CHECK = '1'
+}
 
 $Os = Get-CimInstance Win32_OperatingSystem
 $FreeRamGb = [math]::Round($Os.FreePhysicalMemory / 1MB, 2)

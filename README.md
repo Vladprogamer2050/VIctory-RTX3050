@@ -20,17 +20,36 @@ powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile balanc
 
 # Baseline: disables the relay, for an A/B comparison
 powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile baseline
+
+# Experimental: group sequential indirect draws into windows
+powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile indirect-window
+
+# Validation: re-clamp and compare every draw served from an indirect window
+powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile indirect-window-check
 ```
 
-The launcher uses the Release build, keeps cache and save data under
-`%LOCALAPPDATA%\victory`, and writes a session log under `%TEMP%`.
-The balanced profile changes only the relay switch; experimental paths for
-in-place memory, on-demand texture levels and indirect windows stay disabled.
-This is a test profile, not a performance guarantee. The upstream fork's
+The launcher uses the Release build, defaults to `game_scarlett_master.exe`
+next to the repository (or accepts an explicit `-GameExe` path), keeps cache
+and save data under `%LOCALAPPDATA%\victory`, and writes a session log under
+`%TEMP%`. `balanced` changes only the relay switch; `baseline` disables it.
+`indirect-window` and `indirect-window-check` additionally enable sequential
+indirect-draw windows; the check profile re-clamps every served record and
+compares it with the pre-clamped record, so it is for validation rather than
+performance measurement. Other experimental paths remain disabled.
+These are test profiles, not performance guarantees. The upstream fork's
 reported gameplay memory use exceeds this PC's 16 GB of physical RAM, so
 watch system commit and stop a run if Windows becomes heavily unresponsive.
 See [docs/rtx3050-lab-notes.md](docs/rtx3050-lab-notes.md) for the local
 baseline and A/B test procedure.
+
+## RTX 3050 experiment branch
+
+The public branch `experiment/rt-builder-lds-20261125` contains the current
+NVIDIA-focused lab work: LDS lane-uniform analysis, helper-quad reads, Windows
+10 Agility SDK test setup and the indirect-window experiment profiles above.
+It is experimental and not yet playable on an RTX 3050. The latest documented
+world run reached the `Americas` scene but fell below 1 FPS under the full
+workload. See the lab notes for measured limits and open shader issues.
 
 ## Credits
 

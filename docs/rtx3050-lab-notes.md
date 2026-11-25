@@ -71,5 +71,53 @@ passes with this test-only runtime setup.
   completed successfully.
 
 The Release application itself builds and its `config` command reports
-Agility SDK 620 at `target/release/D3D12/D3D12Core.dll`. No GTA VI launch
-was performed as part of this update.
+Agility SDK 620 at `target/release/D3D12/D3D12Core.dll`. A subsequent launch
+check on this branch is recorded below.
+
+
+## Updated branch launch check — 2026-11-25
+
+A fresh Release build at `d65bdf2` was launched with the `balanced` profile.
+VIctory loaded the Series X title, created the D3D12 device, translated
+shaders, opened the `Americas` scene and reached a heavy world-rendering
+workload. The process stayed responsive, but performance was far below
+playable speed.
+
+| Metric | Observed value |
+|---|---:|
+| Early scene display | 27–30 FPS |
+| Heavy-world frame rate | 0.6–0.8 FPS |
+| Heavy-world frame time | 1,243–1,609 ms |
+| Peak observed draw calls | 2,989/frame |
+| VIctory working set before stop | 6.19 GB |
+| Free physical RAM before stop | 0.47 GB |
+| Device removed / driver timeout | not observed |
+
+The run was stopped manually when free RAM fell below 0.5 GB. Free RAM
+recovered after the process exited. This confirms that the updated branch
+reaches the heavy world scene on this PC; it does not establish playability.
+
+The log showed two compute programs rejected by the shader converter:
+`f133e35efed2a48a` (lane-mask exchange where not every lane runs) and
+`926c46bab3b86bd6` (lane mask holding lanes elsewhere read as data). Several
+compute pipeline creations were also refused with `0x80070057`. These remain
+open shader/host-compatibility issues.
+
+The shader lowering unit subset passed after the LDS and helper-quad changes:
+17 passed, 0 failed, 1 ignored. The full GPU-backed shader suite is not green:
+23 hardware tests failed because the test process did not expose the required
+Shader Model 6.6 device capability; those failures were not suppressed.
+
+## Indirect-window experiment
+
+The launcher now provides two additional profiles:
+
+- `indirect-window`: enables `VICTORY_INDIRECT_WINDOW=1`, grouping sequential
+  indirect draws into clamped windows of up to 64 records.
+- `indirect-window-check`: also enables `VICTORY_INDIRECT_WINDOW_CHECK=1`,
+  re-clamping each draw served from a window and comparing the results. This
+  is a correctness check, not a performance profile.
+
+These profiles have been added for the next controlled test. No performance
+improvement is claimed until the same world scene is measured with comparable
+shader-cache and memory conditions.

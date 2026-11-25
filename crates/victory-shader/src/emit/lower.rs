@@ -25,6 +25,9 @@ use crate::structure::{Atom, Bool, LaneExit, Structured};
 #[path = "intersect.rs"]
 pub(super) mod intersect;
 
+#[path = "lower_lds.rs"]
+mod lds;
+
 type Why = &'static str;
 
 /// How an interpolation evaluates an input channel.
@@ -518,7 +521,9 @@ fn lane_uniform(p: &Program, st: &Structured, all: &[bool]) -> HashSet<Value> {
                     addr: Some(Operand::Vector { reg, .. }),
                     gds: false,
                     ..
-                } if name.starts_with("ds_read") && !name.contains("_d16") => {
+                } if name.starts_with("ds_read")
+                    && !name.contains("_d16")
+                    && lds::settled(p, (b, i)) => {
                     // An unguarded LDS read from a wave-uniform address gives the same value
                     // in every arriving lane. `_d16` forms preserve the other half of the
                     // destination register and are left out.
@@ -1315,6 +1320,7 @@ impl<'a> Lower<'a> {
                 let n = i.name();
                 n.starts_with("ds_swizzle")
                     || n.contains("permute")
+                    || n.starts_with("v_permlane")
                     || n.starts_with("v_mbcnt")
                     || matches!(n, "v_readlane_b32" | "v_writelane_b32")
                     || matches!(&i.fields, Fields::Valu(v) if v.dpp.is_some())
@@ -4440,6 +4446,12 @@ impl<'a> Lower<'a> {
         r
     }
 
+    /// Pixel quads must read helper lanes too: wave lane reads are not a
+    /// substitute for quad reads at primitive edges or after discard.
+    fn helpers_read(&self, quad: bool) -> bool {
+        quad && self.s.pixel
+    }
+
     /// `x` in the first lane of this host wave where `guard` holds, and whether it has such a
     /// lane: the console reads the first lane of EXEC, and a lane that got here with EXEC clear
     /// (a guard, not a branch) is not one. With none, `x` of the wave's first lane here.
@@ -4565,7 +4577,7 @@ impl<'a> Lower<'a> {
                 let t = self.s.m.bin(c, Bin::Or, t, or);
                 self.s.m.bin(c, Bin::Xor, t, xor)
             };
-            let r = if mesh_quad {
+            let r = if mesh_quad || self.helpers_read(quad) {
                 self.quad_pick(x, src)
             } else {
                 self.read_lane(x, src)
@@ -6877,7 +6889,7 @@ impl<'a> Lower<'a> {
                 (src, inside, masks, bound_ctrl)
             }
         };
-        let mut r = if mesh_quad {
+        let mut r = if mesh_quad || self.helpers_read(quad) {
             self.quad_pick(x, src)
         } else {
             self.read_lane(x, src)

@@ -49,7 +49,10 @@ NVIDIA-focused lab work: LDS lane-uniform analysis, helper-quad reads, Windows
 10 Agility SDK test setup and the indirect-window experiment profiles above.
 It is experimental and not yet playable on an RTX 3050. The latest documented
 world run reached the `Americas` scene but fell below 1 FPS under the full
-workload. See the lab notes for measured limits and open shader issues.
+workload. A synthetic D3D12 microbenchmark on the RTX 3050 measured a 97.4%
+reduction in GPU time for 3,200 tiny indirect draws grouped into windows of 32;
+this is not a measured in-game FPS gain. See the lab notes for benchmark
+methodology, measured limits and open shader issues.
 
 ## Credits
 

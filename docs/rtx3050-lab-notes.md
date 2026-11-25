@@ -121,3 +121,50 @@ The launcher now provides two additional profiles:
 These profiles have been added for the next controlled test. No performance
 improvement is claimed until the same world scene is measured with comparable
 shader-cache and memory conditions.
+
+
+## Indirect-window D3D12 microbenchmark — 2026-11-25
+
+The built-in benchmark `indirect::bench::bench_indirect_draw_barriers` was
+run twice on the NVIDIA GeForce RTX 3050. Each run warms up, then measures
+9 frames per case and reports the median. Each frame records 3,200 one-record
+indirect draws of tiny triangles; it does not load GTA VI or game assets.
+
+| Case | Run 1 GPU ms | Run 2 GPU ms |
+|---|---:|---:|
+| One at a time, original clamp | 25.22 | 25.16 |
+| One at a time, current clamp | 25.74 | 25.71 |
+| Windows of 32, original clamp | 43.53 | 43.35 |
+| Windows, original clamp with new barriers | 40.09 | 39.70 |
+| Windows of 32, current clamp | 1.12 | 1.12 |
+| One at a time, current clamp with GPU-resident budget | 21.54 | 21.57 |
+| Windows of 32, current clamp with GPU-resident budget | 0.99 | 0.99 |
+
+The current clamp with windows of 32 was about 97.4% lower GPU time than the
+original one-at-a-time case in both runs. The result was repeatable in this
+microbenchmark. It is not a measured GTA VI frame-rate gain: the benchmark
+uses small test draws, a single synthetic command list and no title shaders,
+textures, memory traffic or cross-queue waits. The next validation is to
+capture a world scene where the title actually issues a long sequence of
+indirect draws, then compare baseline and `indirect-window` at the same point.
+
+The `indirect-window-check` game launch did not reach indirect draws before
+memory pressure required the run to be stopped. Its window-check mode therefore
+has not yet produced real-scene correctness counts.
+
+
+## Real-scene indirect-window attempts — 2026-11-25
+
+Two short game launches were made with `indirect-window-check` and
+`indirect-window` respectively, using the explicit local `-GameExe` path.
+Both reached the `Americas` window and the process remained responsive.
+Neither run reached a title workload that issued indirect draws: the logs
+continued to report 0 indirect executions and 0 indirect mesh dispatches,
+with only 3–12 ordinary draws per frame. The runs were stopped as memory
+pressure increased (free RAM reached 1.92 GB in the check run and 1.38 GB in
+the non-check run). Therefore no real-scene correctness count or in-game
+performance measurement exists for indirect windows yet.
+
+The indirect-window microbenchmark and its correctness tests are positive
+results, but must remain separate from the game's real-scene result until a
+repeatable workload with non-zero indirect draws can be captured.

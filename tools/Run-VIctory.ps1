@@ -2,13 +2,14 @@
 param(
     [ValidateSet('balanced', 'baseline')]
     [string]$Profile = 'balanced',
-    [string]$GameExe = 'D:\GTA6\GTA6.Xbox.v1.0.2.1-CYBERLEEK\game_scarlett_master.exe'
+    [string]$GameExe = 'game_scarlett_master.exe'
 )
 
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $VictoryExe = Join-Path $RepoRoot 'target\release\victory.exe'
 $SdkDll = Join-Path $RepoRoot 'target\release\D3D12\D3D12Core.dll'
+if (-not [System.IO.Path]::IsPathRooted($GameExe)) { $GameExe = Join-Path $RepoRoot $GameExe }
 
 if (-not (Test-Path -LiteralPath $VictoryExe)) { throw "Release executable missing. Run: cargo build --release -p victory" }
 if (-not (Test-Path -LiteralPath $GameExe)) { throw "Game executable not found: $GameExe" }

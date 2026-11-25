@@ -140,11 +140,13 @@ indirect draws of tiny triangles; it does not load GTA VI or game assets.
 | One at a time, current clamp with GPU-resident budget | 21.54 | 21.57 |
 | Windows of 32, current clamp with GPU-resident budget | 0.99 | 0.99 |
 
-The current clamp with windows of 32 was about 97.4% lower GPU time than the
-original one-at-a-time case in both runs. The result was repeatable in this
-microbenchmark. It is not a measured GTA VI frame-rate gain: the benchmark
-uses small test draws, a single synthetic command list and no title shaders,
-textures, memory traffic or cross-queue waits. The next validation is to
+The current clamp with windows of 32 was about 97.4% lower GPU time than
+the original clamp with windows of 32 (43.53/43.35 ms to 1.12 ms). Against
+the original one-at-a-time case, it was about 95.6% lower (25.22/25.16 ms
+to 1.12 ms). The result was repeatable in this microbenchmark. It is not a
+measured GTA VI frame-rate gain: the benchmark uses small test draws, a
+single synthetic command list and no title shaders, textures, memory traffic
+or cross-queue waits. The next validation is to
 capture a world scene where the title actually issues a long sequence of
 indirect draws, then compare baseline and `indirect-window` at the same point.
 

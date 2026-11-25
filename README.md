@@ -50,9 +50,11 @@ NVIDIA-focused lab work: LDS lane-uniform analysis, helper-quad reads, Windows
 It is experimental and not yet playable on an RTX 3050. The latest documented
 world run reached the `Americas` scene but fell below 1 FPS under the full
 workload. A synthetic D3D12 microbenchmark on the RTX 3050 measured a 97.4%
-reduction in GPU time for 3,200 tiny indirect draws grouped into windows of 32;
-this is not a measured in-game FPS gain. See the lab notes for benchmark
-methodology, measured limits and open shader issues.
+GPU-time reduction against the old clamp with the same 32-record windows
+(43.5 to 1.12 ms for 3,200 tiny indirect draws); against the old one-at-a-time
+path the reduction was 95.6%. This is not a measured in-game FPS gain. See
+the lab notes for benchmark methodology, measured limits and open shader
+issues.
 
 ## Credits
 

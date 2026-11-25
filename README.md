@@ -10,6 +10,28 @@ correctly and playably on one particular PC.
 copy of the game. It is not affiliated with or endorsed by the game's
 developer or publisher.
 
+## Local workstation launcher
+
+A PowerShell launcher is provided for the Windows 10 / RTX 3050 test machine:
+
+```powershell
+# Balanced: enables the newer relay path (VICTORY_RELAY=2)
+powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile balanced
+
+# Baseline: disables the relay, for an A/B comparison
+powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile baseline
+```
+
+The launcher uses the Release build, keeps cache and save data under
+`%LOCALAPPDATA%\victory`, and writes a session log under `%TEMP%`.
+The balanced profile changes only the relay switch; experimental paths for
+in-place memory, on-demand texture levels and indirect windows stay disabled.
+This is a test profile, not a performance guarantee. The upstream fork's
+reported gameplay memory use exceeds this PC's 16 GB of physical RAM, so
+watch system commit and stop a run if Windows becomes heavily unresponsive.
+See [docs/rtx3050-lab-notes.md](docs/rtx3050-lab-notes.md) for the local
+baseline and A/B test procedure.
+
 ## Credits
 
 - **[VIctory](https://github.com/Marvisak/VIctory)** by Marvisak and its

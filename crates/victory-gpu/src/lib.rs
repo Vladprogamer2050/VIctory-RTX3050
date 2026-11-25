@@ -69,3 +69,21 @@ pub use watch::{
     title_memory_reading, title_memory_remapped, title_memory_remapping, title_memory_written,
     writing as kernel_will_write,
 };
+
+#[cfg(all(test, windows, target_env = "msvc"))]
+#[allow(non_upper_case_globals)]
+mod test_agility {
+    // Test executables live in target/<profile>/deps. The SDK folder is
+    // installed in target/<profile>/D3D12 by cargo xtask agility.
+    #[repr(transparent)]
+    pub struct SdkPath(*const std::ffi::c_char);
+
+    // SAFETY: this points to a static, immutable C string.
+    unsafe impl Sync for SdkPath {}
+
+    #[unsafe(no_mangle)]
+    pub static D3D12SDKVersion: u32 = 620;
+
+    #[unsafe(no_mangle)]
+    pub static D3D12SDKPath: SdkPath = SdkPath(c"..\\D3D12\\".as_ptr());
+}

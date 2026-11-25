@@ -24,37 +24,52 @@ powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile baseli
 # Experimental: group sequential indirect draws into windows
 powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile indirect-window
 
+# Experimental: windows plus in-place copies of title memory
+powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile indirect-window-copy
+
 # Validation: re-clamp and compare every draw served from an indirect window
 powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile indirect-window-check
 ```
 
-The launcher uses the Release build, defaults to `game_scarlett_master.exe`
-next to the repository (or accepts an explicit `-GameExe` path), keeps cache
-and save data under `%LOCALAPPDATA%\victory`, and writes a session log under
-`%TEMP%`. `balanced` changes only the relay switch; `baseline` disables it.
-`indirect-window` and `indirect-window-check` additionally enable sequential
-indirect-draw windows; the check profile re-clamps every served record and
-compares it with the pre-clamped record, so it is for validation rather than
-performance measurement. Other experimental paths remain disabled.
-These are test profiles, not performance guarantees. The upstream fork's
-reported gameplay memory use exceeds this PC's 16 GB of physical RAM, so
-watch system commit and stop a run if Windows becomes heavily unresponsive.
-See [docs/rtx3050-lab-notes.md](docs/rtx3050-lab-notes.md) for the local
-baseline and A/B test procedure.
+Use `-BuildProfile diag` to launch the optimized diagnostic build with frame
+logs and GPU-card telemetry, and `-Console series-s` or `-Console series-x`
+to select the console profile. The default is the Release build and Series X.
+For a controlled comparison on the same Series S scene:
+
+```powershell
+$game = 'D:\GTA6\GTA6.Xbox.v1.0.2.1-CYBERLEEK\game_scarlett_master.exe'
+powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile indirect-window -BuildProfile diag -Console series-s -GameExe $game
+powershell -ExecutionPolicy Bypass -File .\tools\Run-VIctory.ps1 -Profile indirect-window-copy -BuildProfile diag -Console series-s -GameExe $game
+```
+
+The launcher defaults to `game_scarlett_master.exe` next to the repository
+(or accepts an explicit `-GameExe` path), keeps cache and save data under
+`%LOCALAPPDATA%\victory`, and writes a session log under `%TEMP%`.
+`balanced` changes only the relay switch; `baseline` disables it.
+`indirect-window` enables sequential indirect-draw windows.
+`indirect-window-copy` adds `VICTORY_COPY_PLAIN=1`, which tries an in-place
+copy of title memory into host buffers and falls back to the kernel's copy if
+a source page is unavailable. It is off by default. The check profile
+re-clamps every served record and compares it with the pre-clamped record,
+so it is for validation rather than performance measurement. These are test
+profiles, not performance guarantees. Close memory-heavy applications before
+world tests and stop a run if free physical RAM approaches 1 GB. See
+[docs/rtx3050-lab-notes.md](docs/rtx3050-lab-notes.md) for methodology, results
+and open issues.
 
 ## RTX 3050 experiment branch
 
-The public branch `experiment/rt-builder-lds-20261125` contains the current
-NVIDIA-focused lab work: LDS lane-uniform analysis, helper-quad reads, Windows
-10 Agility SDK test setup and the indirect-window experiment profiles above.
-It is experimental and not yet playable on an RTX 3050. The latest documented
-world run reached the `Americas` scene but fell below 1 FPS under the full
-workload. A synthetic D3D12 microbenchmark on the RTX 3050 measured a 97.4%
-GPU-time reduction against the old clamp with the same 32-record windows
-(43.5 to 1.12 ms for 3,200 tiny indirect draws); against the old one-at-a-time
-path the reduction was 95.6%. This is not a measured in-game FPS gain. See
-the lab notes for benchmark methodology, measured limits and open shader
-issues.
+The public branch `experiment/fps-copy-plain-20261125` contains the current
+NVIDIA-focused lab work: the LDS lane-uniform analysis, helper-quad reads,
+Windows 10 Agility SDK test setup, indirect-window experiments and the new
+optional plain-copy path. It is experimental and not yet playable on an RTX
+3050. A previous world run reached a heavy scene but fell below 1 FPS under
+the full workload. A synthetic D3D12 microbenchmark on the RTX 3050 measured
+a 97.4% GPU-time reduction against the old clamp with the same 32-record
+windows (43.5 to 1.12 ms for 3,200 tiny indirect draws); against the old
+one-at-a-time path the reduction was 95.6%. This is not a measured in-game
+FPS gain. See the lab notes for benchmark methodology, measured limits and
+open shader issues.
 
 ## Credits
 

@@ -170,3 +170,73 @@ performance measurement exists for indirect windows yet.
 The indirect-window microbenchmark and its correctness tests are positive
 results, but must remain separate from the game's real-scene result until a
 repeatable workload with non-zero indirect draws can be captured.
+
+## Series S diagnostic run — 2026-11-25
+
+The `0b0074e` upstream follow-up was applied on the local performance
+branch. Its `plaincopy` tests passed (4 passed, 0 failed), and both the
+Release application and the diagnostic application built successfully.
+The launcher was extended to select `-BuildProfile diag`, `-Console series-s`
+and the `indirect-window-copy` profile, which adds `VICTORY_COPY_PLAIN=1`
+to the indirect-window profile.
+
+A first diagnostic launch used:
+
+- Build: `diag`, with frame logging and GPU-card telemetry.
+- Console profile: Xbox Series S.
+- Performance profile: `indirect-window`; plain-copy remained off.
+- Hardware: Ryzen 5 5600, RTX 3050 8 GB, 16 GB system RAM, Windows 10.
+- Game executable: the local Series X title build supplied by the user.
+
+The title reached the `Americas` window and remained responsive, but this
+was not a usable open-world benchmark. The window title reported around
+28–30 FPS and 8–14 draws per frame. The host log repeatedly reported zero
+indirect executions and zero indirect mesh dispatches. Thus the indirect
+window switch had no indirect workload to optimize, and `VICTORY_COPY_PLAIN`
+was not enabled in this run.
+
+The title's frame interval was 33.333 ms. Ordinary menu frames were about
+33 ms, while most periodic GPU summaries reported approximately 0.0 ms of
+GPU work. The selected Series S profile was confirmed in the log, but the
+display mode reported to the title still remained 3840×2160; this run does
+not show that the Series S profile lowered the output resolution.
+
+The diagnostic trace did expose CPU/resource stalls outside the steady menu
+frames:
+
+| Event | Frame time | Notable work |
+|---|---:|---|
+| At 88.5 s | 127 ms | render thread 62 ms; remapping 64.9 ms across 291 calls; 104 disk reads / 16.8 MB |
+| At 89.6 s | 1,083 ms | submit calls 156.7 ms; recording 54.5 ms across all threads; 226 other GPU lists; 738 disk reads / 99.3 MB; GPU idle 1,043.7 ms |
+| At 103.5 s | 170 ms | submit calls 148.6 ms; recording 28.3 ms; GPU idle 166.6 ms |
+| At 105.1 s | 206 ms | recording 174.4 ms across 614 calls; copies 2.7 ms / 3.3 MB; 358 disk reads / 16.4 MB |
+| At 109.9 s | 455 ms | recording 416.8 ms across 567 calls; submit calls 55.4 ms; copies 4.5 ms / 5.5 MB; GPU idle 445.2 ms |
+
+At the end of the run the process had about 9.4 GB of private/committed
+memory, of which about 5.8 GB was resident; the GPU reported about 3.0 GB in
+use from a 7.27 GB budget. Free physical RAM fell to approximately 0.68 GB.
+The process was deliberately terminated and free RAM recovered. The launcher
+reported exit code 1 because of that manual termination; this was not a
+reported D3D12 device-removal event.
+
+This trace points to CPU-side command recording, submission, memory
+remapping, resource uploads and disk reads as the main visible sources of
+long stalls in this low-draw workload. It does not establish which of these
+dominates in the open world. The current menu trace also shows very little
+copy volume, so it cannot validate the potential `plaincopy` benefit.
+Do not claim an FPS improvement from this run.
+
+### Next controlled test
+
+1. Reach the same gameplay checkpoint in both runs, not just the `Americas` window.
+2. Use `-BuildProfile diag -Console series-s` for both runs.
+3. First run `-Profile indirect-window`; then run `-Profile indirect-window-copy`.
+4. Compare the same scene after shader/cache warm-up. Record draw calls, non-zero
+   indirect counts, frame time, submit/recording time, in-place copy count/MB,
+   GPU busy time and free system RAM.
+5. Start only with at least 6 GB free physical RAM; stop before it approaches
+   1 GB. Close memory-heavy applications only when it is safe to do so.
+
+Log from this diagnostic pass is stored locally under `%TEMP%` as
+`victory-indirect-window-20261125-160313.log`. The raw log is not committed
+because it contains machine-specific paths and session details.

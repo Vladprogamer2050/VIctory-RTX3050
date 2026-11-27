@@ -6,6 +6,19 @@ This repository is a fork of [fxceless/victory-fork](https://github.com/fxceless
 
 **No game executable, game data, keys or copyrighted assets are included.** You must provide your own legally obtained game files. This project is unofficial and is not affiliated with or endorsed by the game's developer or publisher.
 
+## Research archive — November 2026
+
+We also preserve a traceable history of the wider local experiment: collected VIctory forks, pinned upstream commits, Windows 10 / D3D12 startup work, launcher experiments, memory-pressure tests, failed optimizations and benchmark caveats.
+
+**Start with the [Lab Archive](docs/LAB_ARCHIVE.md).**
+
+- [Timeline](docs/LAB_TIMELINE.md) — dated history of the experiments.
+- [Fork catalogue](docs/FORK_CATALOG.md) — original repositories and commit pins for local checkouts.
+- [RTX 3050 results](docs/RTX3050_RESULTS.md) — measurements, evidence quality and limitations.
+- [Local lab inventory](docs/LOCAL_LAB_INVENTORY.md) — preserved snapshots and excluded files.
+
+This is a research archive, not a claim that every collected fork works or that the game is playable on this PC. Third-party source code remains at its original repository; we link to it instead of mirroring it.
+
 ## Current test system
 
 | Component | Configuration |
@@ -19,14 +32,16 @@ This repository is a fork of [fxceless/victory-fork](https://github.com/fxceless
 
 Results are specific to this machine and can vary substantially with scene, camera position, shader cache, memory pressure and build options.
 
-## Current status — 25 November 2026
+## Current status — 27 November 2026
 
-- The program starts, reaches the menus and loads into the game world.
-- The world renders, but it is **not playable** on this test system.
-- Recent diagnostic windows measured roughly **2.5–3.0 FPS** (333–406 ms median frame time).
-- Rendering and lighting are still incomplete; a successful world load does not mean visual parity with the console.
-- Memory use is high. During the latest run, free physical RAM approached 1.9–2.1 GB, so tests use a conservative memory stop threshold.
-- The figures above are observations from diagnostic runs, not a controlled benchmark or a promise of performance.
+- Multiple VIctory-derived forks have been built or examined locally, including a clean [edupode/cold-project-vi](https://github.com/edupode/cold-project-vi) baseline and [Belobug's AMD fork](https://github.com/Belobug/VIctory-Belobug-AMD).
+- A local D3D12 Agility SDK 1.620.2 integration changed the early startup path on Windows 10: the runtime reported SDK version 620 and earlier root-signature flag errors stopped appearing in the subsequent run.
+- Frame presentation was observed during an early loading stage, with a temporary counter around 28–30 FPS. This is **not** a gameplay benchmark.
+- Earlier world-scene diagnostic samples on this machine were often around 0.3–1.4 FPS and encountered severe memory pressure. See the [results log](docs/RTX3050_RESULTS.md) for exact caveats.
+- Julia's Launcher v0.3.5 was downloaded and its release asset hashes verified locally; starting the launcher is not proof of a playable game session.
+- A stable, playable open-world session on this RTX 3050 / 16 GB system has **not** been established.
+
+All figures are observations from specific diagnostic runs, not a controlled benchmark or a promise of performance.
 
 ## What this fork is investigating
 
@@ -43,7 +58,7 @@ Recent local experiments selectively adapt ideas from community pull requests in
 - [PR #1043 — descriptor and heap synchronization work](https://github.com/fxceless/victory-fork/pull/1043). A targeted subset was ported locally, with a regression test for a heap-buffer slot being re-queued by the pass that just mirrored it.
 - [PR #1044 — size the DirectStorage worker pool to physical cores](https://github.com/fxceless/victory-fork/pull/1044). The local build detected six physical cores and started six workers. **A performance gain has not been demonstrated on the RTX 3050 test system.**
 
-These changes are being evaluated in a local experiment branch and should not be assumed to be present in this repository's default branch until they are published here. We report an optimization as successful only after comparable measurements; copying a patch is not the same as proving it helps this machine.
+These changes were evaluated in local experiment branches and should not be assumed to be present in this repository's default branch until published here. We report an optimization as successful only after comparable measurements; copying a patch is not the same as proving it helps this machine.
 
 A larger candidate under review is [PR #1007 — background worker for heap-indexed texture uploads](https://github.com/fxceless/victory-fork/pull/1007). Its reported gains were measured on a different GPU and CPU, so they cannot be transferred to this system without testing.
 
@@ -60,5 +75,6 @@ Local diagnostic launcher notes and experiment records are maintained in this re
 - **[XCL](https://github.com/ivall/xcl)** was consulted as a behavioral reference; it is a separate project.
 - Some inherited memory-view and kernel-read work originates from **[myokex/victory-amd](https://github.com/myokex/victory-amd)** and **Joshua Odom**. Their original attribution and commit history are retained in the relevant source history.
 - Community pull requests are credited individually above and in the code/history where their changes are used.
+- Other forks and launcher releases mentioned in the lab archive retain their original authorship and licences; this repository links to their canonical sources.
 
 This project is licensed under **GPL-3.0-or-later**. See [LICENSE](LICENSE). The original projects and their contributors retain credit for their work.
